@@ -331,8 +331,13 @@ module Rack
       page_struct[:root].record_time((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start) * 1000)
 
       if flamegraph
-        body.close if body.respond_to? :close
-        return client_settings.handle_cookie(self.flamegraph(flamegraph))
+        # https://github.com/MiniProfiler/rack-mini-profiler/pull/352/commits/986481fda7ad36ba1f80f3fe26904bf8293d16bf
+        if query_string =~ /save/
+          ::File.write '/tmp/flamegraph.html', flamegraph
+        else
+          body.close if body.respond_to? :close
+          return client_settings.handle_cookie(self.flamegraph(flamegraph))
+        end
       end
 
 
